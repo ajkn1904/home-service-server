@@ -37,7 +37,7 @@ async function run(){
         app.get('/services/:id', async(req, res) => {
           const id = req.params.id;
           const query = { _id: ObjectId(id) };
-          const service = await serviceCollections.findMany(query);
+          const service = await serviceCollections.findOne(query);
           res.send(service);
         })
 
@@ -55,7 +55,6 @@ async function reviewApi(){
 
   try{
       const serviceCollections = client.db('homeService').collection('reviews');
-      const userReview = {};
 
       app.get('/allreviews', async(req,res) => {
         const query = {};
@@ -68,8 +67,8 @@ async function reviewApi(){
         const id = req.params.id;
         const query = { 
           serviceInfo: id };
-        const service = await serviceCollections.find(query).toArray();
-        res.send(service);
+        const review = await serviceCollections.find(query).toArray();
+        res.send(review);
       })
       
 
