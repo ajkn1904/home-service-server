@@ -49,6 +49,38 @@ async function run(){
 }
 run().catch(error => console.error(error));
 
+
+
+async function reviewApi(){
+
+  try{
+      const serviceCollections = client.db('homeService').collection('reviews');
+      const userReview = {};
+
+      app.get('/allreviews', async(req,res) => {
+        const query = {};
+        const cursor = serviceCollections.find(query);
+        const reviews = await cursor.toArray();
+        res.send(reviews);
+      });
+
+
+      app.post('/reviews', async(req, res) => {
+        const review = req.body;
+        const result = await serviceCollections.insertOne(review)
+        res.send(review);
+      })
+
+  }
+  finally{
+
+  }
+
+}
+reviewApi().catch(error => console.error(error));
+
+
+
 app.get('/', (req, res) => {
     res.send('Home Service API running!');
   });
