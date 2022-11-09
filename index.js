@@ -37,7 +37,7 @@ async function run(){
         app.get('/services/:id', async(req, res) => {
           const id = req.params.id;
           const query = { _id: ObjectId(id) };
-          const service = await serviceCollections.findOne(query);
+          const service = await serviceCollections.findMany(query);
           res.send(service);
         })
 
@@ -64,6 +64,14 @@ async function reviewApi(){
         res.send(reviews);
       });
 
+      app.get('/review/:id', async(req, res) => {
+        const id = req.params.id;
+        const query = { 
+          serviceInfo: id };
+        const service = await serviceCollections.find(query).toArray();
+        res.send(service);
+      })
+      
 
       app.post('/reviews', async(req, res) => {
         const review = req.body;
