@@ -111,7 +111,7 @@ async function reviewApi(){
         const id = req.params.id;
         const query = { 
           serviceInfo: id };
-        const review = await serviceCollections.find(query).toArray();
+        const review = await serviceCollections.find(query).sort({_id:-1}).toArray();
         res.send(review);
       })
 
