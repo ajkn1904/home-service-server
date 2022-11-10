@@ -1,5 +1,8 @@
 const express = require('express');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const jwt = require('jsonwebtoken')
+
+
 const app = express();
 const cors = require('cors');
 const port = process.env.PORT || 5000;
@@ -14,6 +17,26 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@clu
 
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+
+
+function verifyToken(req, res, next){
+  const authHeader = req.headers.authorization;
+
+  if(!authHeader){
+      return res.status(401).send({message: 'Unauthorized access!'});
+  }
+  const token = authHeader.split(' ')[1];
+
+  jwt.verify(token, process.env.HOMESERVICE_TOKEN, function(error, decoded){
+      if(error){
+          return res.status(403).send({message: 'Forbidden access!'});
+      }
+      req.decoded = decoded;
+      next();
+  })
+}
+
+
 
 async function run(){
 
@@ -48,6 +71,7 @@ async function run(){
           res.send(addService);
         })
 
+
     }
     finally{
 
@@ -62,6 +86,14 @@ async function reviewApi(){
 
   try{
       const serviceCollections = client.db('homeService').collection('reviews');
+
+      
+      app.post('/jwt', (req, res) => {
+        const user = req.body;
+        const token = jwt.sign(user, process.env.HOMESERVICE_TOKEN, {expiresIn: '12hr'})
+        res.send({token})
+      })
+
 
       app.get('/allreviews', async(req,res) => {
         const query = {};
@@ -79,7 +111,13 @@ async function reviewApi(){
       })
 
       
-      app.get('/myreviews', async (req, res) => {
+      app.get('/myreviews', verifyToken, async (req, res) => {
+        const decoded = req.decoded
+        console.log('inside Api', decoded)
+        if(decoded.email !== req.query.email){
+          res.status(403).send({message: 'unauthorized access'})
+        }
+        
         let query = {};
 
         if (req.query.email) {
@@ -101,7 +139,7 @@ async function reviewApi(){
       })
 
 
-      app.patch('updateReview/:id', async(req, res) => {
+      app.patch('updateReview/:id', verifyToken, async(req, res) => {
         const id = req.params.id;
         const status = req.body.status;
         const query = { _id: ObjectId(id)}
@@ -114,14 +152,13 @@ async function reviewApi(){
         res.send(result)
       })
 
-      app.delete('/deleteReview/:id', async(req, res) => {
+      app.delete('/deleteReview/:id', verifyToken, async(req, res) => {
         const id = req.params.id;
         const query = { _id: ObjectId(id)}
         const result = await serviceCollections.deleteOne(query)
         res.send(result)
 
       })
-
   }
   finally{
 
