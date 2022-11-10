@@ -91,13 +91,35 @@ async function reviewApi(){
         const cursor = serviceCollections.find(query);
         const myreviews = await cursor.toArray();
         res.send(myreviews);
-    });
+      });
       
 
       app.post('/reviews', async(req, res) => {
         const review = req.body;
         const result = await serviceCollections.insertOne(review)
         res.send(review);
+      })
+
+
+      app.patch('updateReview/:id', async(req, res) => {
+        const id = req.params.id;
+        const status = req.body.status;
+        const query = { _id: ObjectId(id)}
+        const newReview = {
+          $set:{
+            status: status
+          }
+        }
+        const result = await serviceCollections.updateOne(query, newReview)
+        res.send(result)
+      })
+
+      app.delete('/deleteReview/:id', async(req, res) => {
+        const id = req.params.id;
+        const query = { _id: ObjectId(id)}
+        const result = await serviceCollections.deleteOne(query)
+        res.send(result)
+
       })
 
   }
