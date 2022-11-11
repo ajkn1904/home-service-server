@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken')   //JWT
 
 
 const app = express();
@@ -9,7 +9,7 @@ const cors = require('cors');
 const port = process.env.PORT || 5000;
 
 
-
+//middle ware
 app.use(cors(
   {
     origin : '*'
@@ -23,6 +23,8 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@clu
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+
+//jwt token verifier 
 
 function verifyToken(req, res, next){
   const authHeader = req.headers.authorization;
@@ -48,6 +50,7 @@ async function run(){
     try{
         const serviceCollections = client.db('homeService').collection('services')
 
+        //api for loading all services
         app.get('/services', async(req,res) => {
           const query = {};
           const cursor = serviceCollections.find(query);
@@ -55,6 +58,7 @@ async function run(){
           res.send(services);
         });
 
+        //api for loading a limited services
         app.get('/limitedservices', async(req,res) => {
           const query = {};
           const cursor = serviceCollections.find(query);
@@ -62,6 +66,7 @@ async function run(){
           res.send(services);
         });
 
+        //api for loading a service by its id
         app.get('/services/:id', async(req, res) => {
           const id = req.params.id;
           const query = { _id: ObjectId(id) };
@@ -69,7 +74,7 @@ async function run(){
           res.send(service);
         })
 
-        
+        //api to add a service document  to database
         app.post('/addservice', async(req, res) => {
           const addService = req.body;
           const result = await serviceCollections.insertOne(addService)
@@ -86,20 +91,20 @@ async function run(){
 run().catch(error => console.error(error));
 
 
-
+// api function for handling reviews
 async function reviewApi(){
 
   try{
       const serviceCollections = client.db('homeService').collection('reviews');
 
-      
+      //api for sign in with jwt token verification
       app.post('/jwt', (req, res) => {
         const user = req.body;
         const token = jwt.sign(user, process.env.HOMESERVICE_TOKEN, {expiresIn: '12hr'})
         res.send({token})
       })
 
-
+      //api for loading all reviews
       app.get('/allreviews', async(req,res) => {
         const query = {};
         const cursor = serviceCollections.find(query);
@@ -107,6 +112,7 @@ async function reviewApi(){
         res.send(reviews);
       });
 
+      //api for loading a review by its element
       app.get('/review/:id', async(req, res) => {
         const id = req.params.id;
         const query = { 
@@ -115,6 +121,7 @@ async function reviewApi(){
         res.send(review);
       })
 
+      //api for loading a review by parameter
       app.get('/specificReview/:id', async(req, res) => {
         const id = req.params.id;
         const query = { 
@@ -124,9 +131,11 @@ async function reviewApi(){
       })
 
       
+      //api for loading reviews of a specific user
       app.get('/myreviews', verifyToken, async (req, res) => {
         const decoded = req.decoded
         console.log('inside Api', decoded)
+        //JWT verification
         if(decoded.email !== req.query.email){
           res.status(403).send({message: 'unauthorized access'})
         }
@@ -145,6 +154,7 @@ async function reviewApi(){
       });
       
 
+      //api for adding a review to the database
       app.post('/reviews', async(req, res) => {
         const review = req.body;
         const result = await serviceCollections.insertOne(review)
@@ -152,22 +162,24 @@ async function reviewApi(){
       })
 
 
+      //api for updating a review of the database
       app.put('/updateReview/:id', verifyToken, async(req, res) => {
         const id = req.params.id;
-        const status = req.body.status;
+        console.log(id)
+        const status = req.body;
+        console.log(status)
         const query = { _id: ObjectId(id)}
-        
-        const option = {upsert: true};
         const newReview = {
           $set:{
-            text: status
+            text: status.review
           }
         }
         console.log(newReview)
-        const result = await serviceCollections.updateOne(query, newReview, option)
+        const result = await serviceCollections.updateOne(query, newReview)
         res.send(result)
       })
 
+      //api for deleting a review from the database
       app.delete('/deleteReview/:id', verifyToken, async(req, res) => {
         const id = req.params.id;
         const query = { _id: ObjectId(id)}
