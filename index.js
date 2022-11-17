@@ -95,7 +95,7 @@ run().catch(error => console.error(error));
 async function reviewApi(){
 
   try{
-      const serviceCollections = client.db('homeService').collection('reviews');
+      const reviewCollections = client.db('homeService').collection('reviews');
 
       //api for sign in with jwt token verification
       app.post('/jwt', (req, res) => {
@@ -107,7 +107,7 @@ async function reviewApi(){
       //api for loading all reviews
       app.get('/allreviews', async(req,res) => {
         const query = {};
-        const cursor = serviceCollections.find(query);
+        const cursor = reviewCollections.find(query);
         const reviews = await cursor.toArray();
         res.send(reviews);
       });
@@ -117,7 +117,7 @@ async function reviewApi(){
         const id = req.params.id;
         const query = { 
           serviceInfo: id };
-        const review = await serviceCollections.find(query).sort({_id:-1}).toArray();
+        const review = await reviewCollections.find(query).sort({_id:-1}).toArray();
         res.send(review);
       })
 
@@ -126,7 +126,7 @@ async function reviewApi(){
         const id = req.params.id;
         const query = { 
           _id: ObjectId(id) };
-        const spreview = await serviceCollections.findOne(query);
+        const spreview = await reviewCollections.findOne(query);
         res.send(spreview);
       })
 
@@ -148,7 +148,7 @@ async function reviewApi(){
             }
         }
 
-        const cursor = serviceCollections.find(query);
+        const cursor = reviewCollections.find(query);
         const myreviews = await cursor.toArray();
         res.send(myreviews);
       });
@@ -157,7 +157,7 @@ async function reviewApi(){
       //api for adding a review to the database
       app.post('/reviews', async(req, res) => {
         const review = req.body;
-        const result = await serviceCollections.insertOne(review)
+        const result = await reviewCollections.insertOne(review)
         res.send(review);
       })
 
@@ -165,9 +165,9 @@ async function reviewApi(){
       //api for updating a review of the database
       app.put('/updateReview/:id', verifyToken, async(req, res) => {
         const id = req.params.id;
-        console.log(id)
+        //console.log(id)
         const status = req.body;
-        console.log(status)
+        //console.log(status)
         const query = { _id: ObjectId(id)}
         const newReview = {
           $set:{
@@ -175,7 +175,7 @@ async function reviewApi(){
           }
         }
         console.log(newReview)
-        const result = await serviceCollections.updateOne(query, newReview)
+        const result = await reviewCollections.updateOne(query, newReview)
         res.send(result)
       })
 
@@ -183,7 +183,7 @@ async function reviewApi(){
       app.delete('/deleteReview/:id', verifyToken, async(req, res) => {
         const id = req.params.id;
         const query = { _id: ObjectId(id)}
-        const result = await serviceCollections.deleteOne(query)
+        const result = await reviewCollections.deleteOne(query)
         res.send(result)
 
       })
